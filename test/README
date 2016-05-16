@@ -1,0 +1,2 @@
+To check memory leak:
+# valgrind --tool=memcheck --leak-check=full

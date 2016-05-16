@@ -1,0 +1,95 @@
+Subroutines :
+
+################################################################################################
+laplace : 
+  - laplace_utils.c : 
+    1) void adap_fmm_init(const int accuracy, const int nparts)
+    2) void adap_fmm_graph(const int nparts, const int s, const double *ploc)
+    3) void adap_fmm_charge(const double *pcharge)
+    4) void adap_fmm_post(double *pot, double *field, double *dxx, double *dyy, double *dzz,
+                         double *dxy, double *dxz, double *dyz)
+    5) void adap_fmm_clean(void)
+
+  - laplace_op.c 
+    1) void kernel(const double *T, const double *S, const double charge,
+                  double *pot, double *field1, double *field2, double *field3,
+                  double *DXX, double *DYY, double *DZZ, double *DXY, double *DXZ,double *DYZ)
+    2) void TSM(const int ibox): generate multipole expansion for ibox.
+       - compute MPOLE[PGSZ*ibox];
+    
+    3) void TMM(const int pbox): compute the multipole expansion of a nonleaf box by translating 
+       and accumulating each of its child's multipole expansion. 
+       - Compute MPOLE[PGSZ*pbox];
+    
+    4) void TME(const int ibox): Converts multipole expansion of ibox into six exponential expansion.
+       void TME_PHASE1(const dcomplex *mpole, dcomplex *mexpup, dcomplex *mexpdown, const int ibox)
+       void TME_PHASE2(const dcomplex *mexpf, dcomplex *mexpphys, const int ibox)
+       - Compute LEXPU, LEXPD, LEXPN[], LEXPS[], LEXPE[NEXTPTOTP * ibox], LEXPW[NEXPTOTP *ibox],
+    
+    5) void TSL(const int ibox, const int member): Compute local expansion about ibox's center.
+       - Compute LOCAL[PGSZ * ibox]
+
+    6) void TLT(const int ibox): Evaluate local expansion at each particle location in leaf box-ibox.
+       - Compute FMMPOT[ibox], FMMFIELD[ibox], FMMDXX,FMMDYY, FMMDZZ, FMMDXY, FMMDXZ,FMMDYZ.
+
+    7) void TMT(const int ibox, const int i, const int member)
+    
+    8) void TEL(const int ibox): Converts exponential expansion into local expansion. 
+       void TEL_UD(const int ibox)
+       void TEL_NS(const int ibox)
+       void TEL_EW(const int ibox)
+       void TEL_PHASE1(dcomplex *mexpf, const dcomplex *mexpphys, const int level)
+       void TEL_PHASE2(dcomplex *local, const int iexpu, const dcomplex *mexpup,
+                       const int iexpd, const dcomplex *mexpdown, const int level)
+       - Compute LOCAL[] ?
+
+    9) void TLL(const int pbox): Translate the local expansion of a nonleaf box to children.
+       - 
+
+######################################################################################################
+common: 
+  - construct_sym_graph.c
+    1) int create_all_box(const double *ploc, const int nparts, const int s,
+                          int *perm, int *nboxes, int *nlev, double *size,
+                          fmmbox **boxes, int **content)
+       a) void divide_box(double *bcenter, const double *ploc, int *start,
+                      const int npoints, int *swap, int *addrs, int *counts)
+          i) void assign_particle(const double *ploc, int *start, const int npoints,
+	     const int direction, const double cutoff, int *swap, int *undercutoff)
+    2) int create_colleague(const fmmbox *boxes, const int *content, const int nlev,
+	                     const double size, fmmlist *list)
+    3) int create_list134(const fmmbox *boxes, const int *content, const int nlev,
+	                       const int nboxes, const double size, fmmlist *list)
+    4) void create_list_up(const int mybox, int *uall, int *nuall, int *xuall, int *yuall,
+                           int *u1234, int *nu1234, int *x1234, int *y1234)
+    5) void create_list_down(const int mybox, int *dall, int *ndall, int *xdall, int *ydall,
+                              int *d5678, int *nd5678, int *x5678, int *y5678)
+    7) void create_list_north(const int mybox, int *nall, int *nnall, int *xnall, int *ynall,
+                              int *n1256, int *nn1256, int *x1256, int *y1256,
+                              int *n12, int *nn12, int *x12, int *y12,
+    8) void create_list_south(const int mybox, int *sall, int *nsall, int *xsall, int *ysall,
+                           int *s3478, int *ns3478, int *x3478, int *y3478,
+                             int *s34, int *ns34, int *x34, int *y34,
+                              int *s78, int *ns78, int *x78, int *y78)int *n56, int *nn56, int *x56, int *y56)
+    9) void create_list_west(const int mybox, int *wall, int *nwall, int *xwall, int *ywall,
+                           int *w2468, int *nw2468, int *x2468, int *y2468,
+                           int *w24, int *nw24, int *x24, int *y24,
+                           int *w68, int *nw68, int *x68, int *y68,
+                          int *w2, int *nw2, int *x2, int *y2,
+                           int *w4, int *nw4, int *x4, int *y4,
+                           int *w6, int *nw6, int *x6, int *y6,
+                           int *w8, int *nw8, int *x8, int *y8)
+
+ - traverse_sym_graph.c
+   1) void adap_fmm_compute(void)
+      a) void ProcFarField(void)
+         i)  void Aggregate(const int ibox)
+	     - TSM(), TMM()
+         ii) void Disaggregate(const int ibox)
+	     - void LIST4(const int ibox)
+	       - TSL(), DIRECT_D()
+
+
+      b) void ProcNearField(void)
+         i)  void LIST3(const int ibox)
+	 ii) void LIST1(const int ibox) : DIRECT_D(), DIRECT_S()

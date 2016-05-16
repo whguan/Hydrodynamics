@@ -1,0 +1,13 @@
+By Wenhua Guan, March 14th. 2015.
+This program is for computing matrix vector multiplication of 
+the Rotne-Prager matrix tensor. It calls four Laplace FMM kernel 
+and can reach different accuracy. In the direct evaluation, the
+self to self interaction is ignored. If self-to-self interaction needs
+to be computed, just add it in the subroutine rpy3supeval().
+
+In this code, four times of FMM whole procedure have been called. 
+Actually, initilization and  graph just need to be established once. 
+Computation and post can be updated each time. 
+
+To do list: 
+- How to parallelize the computation of 4 FMM Callings.
